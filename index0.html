@@ -1,0 +1,2470 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Sentiment Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f8fafc;
+            min-height: 100vh;
+            transition: all 0.3s ease;
+            color: #334155;
+        }
+
+        body.dark-mode {
+            background: #0f172a;
+            color: #e2e8f0;
+        }
+
+        /* Navigation Styles */
+        .navbar {
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        body.dark-mode .navbar {
+            background: #1e293b;
+            border-bottom-color: #334155;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            height: 70px;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            text-decoration: none;
+        }
+
+        body.dark-mode .nav-brand {
+            color: #f1f5f9;
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            gap: 8px;
+        }
+
+        .nav-item {
+            position: relative;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            color: #64748b;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .nav-link:hover {
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+
+        .nav-link.active {
+            background: #3b82f6;
+            color: #ffffff;
+        }
+
+        body.dark-mode .nav-link {
+            color: #94a3b8;
+        }
+
+        body.dark-mode .nav-link:hover {
+            background: #334155;
+            color: #f1f5f9;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .theme-toggle {
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            color: #64748b;
+        }
+
+        .theme-toggle:hover {
+            background: #e2e8f0;
+        }
+
+        body.dark-mode .theme-toggle {
+            background: #334155;
+            border-color: #475569;
+            color: #94a3b8;
+        }
+
+        body.dark-mode .theme-toggle:hover {
+            background: #475569;
+        }
+
+        /* Page Container */
+        .page-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* Page Header */
+        .page-header {
+            margin-bottom: 32px;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 0 0 8px 0;
+        }
+
+        body.dark-mode .page-title {
+            color: #f1f5f9;
+        }
+
+        .page-subtitle {
+            color: #64748b;
+            font-size: 1.125rem;
+            margin: 0;
+        }
+
+        body.dark-mode .page-subtitle {
+            color: #94a3b8;
+        }
+
+        /* Card Styles */
+        .card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        body.dark-mode .card {
+            background: #1e293b;
+            border-color: #334155;
+        }
+
+        .card-header {
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin: 0;
+        }
+
+        body.dark-mode .card-title {
+            color: #f1f5f9;
+        }
+
+        /* Grid Layouts */
+        .grid {
+            display: grid;
+            gap: 24px;
+        }
+
+        .grid-cols-1 { grid-template-columns: 1fr; }
+        .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+        .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+        .grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+
+        /* Stats Cards */
+        .stat-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        body.dark-mode .stat-card {
+            background: #1e293b;
+            border-color: #334155;
+        }
+
+        .stat-card.primary {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            border-color: #3b82f6;
+            color: #ffffff;
+        }
+
+        .stat-card.success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            border-color: #10b981;
+            color: #ffffff;
+        }
+
+        .stat-card.warning {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            border-color: #f59e0b;
+            color: #ffffff;
+        }
+
+        .stat-card.danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border-color: #ef4444;
+            color: #ffffff;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #374151;
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+
+        body.dark-mode .form-label {
+            color: #d1d5db;
+        }
+
+        .form-input,
+        .form-textarea,
+        .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+            background: #ffffff;
+            color: #374151;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        body.dark-mode .form-input,
+        body.dark-mode .form-textarea,
+        body.dark-mode .form-select {
+            background: #374151;
+            border-color: #4b5563;
+            color: #f9fafb;
+        }
+
+        body.dark-mode .form-input:focus,
+        body.dark-mode .form-textarea:focus,
+        body.dark-mode .form-select:focus {
+            border-color: #3b82f6;
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* Button Styles */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: #ffffff;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+            transform: translateY(-1px);
+        }
+
+        .btn-full {
+            width: 100%;
+        }
+
+        /* Table Styles */
+        .table-container {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        body.dark-mode .table-container {
+            background: #1e293b;
+            border-color: #334155;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th,
+        .table td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        body.dark-mode .table th,
+        body.dark-mode .table td {
+            border-bottom-color: #334155;
+        }
+
+        .table th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        body.dark-mode .table th {
+            background: #0f172a;
+            color: #d1d5db;
+        }
+
+        .table td {
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
+        body.dark-mode .table td {
+            color: #9ca3af;
+        }
+
+        .table tr:hover {
+            background: #f8fafc;
+        }
+
+        body.dark-mode .table tr:hover {
+            background: #334155;
+        }
+
+        /* Badge Styles */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        body.dark-mode .badge-success {
+            background: #14532d;
+            color: #bbf7d0;
+        }
+
+        body.dark-mode .badge-warning {
+            background: #451a03;
+            color: #fde68a;
+        }
+
+        body.dark-mode .badge-danger {
+            background: #450a0a;
+            color: #fecaca;
+        }
+
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        body.dark-mode .chart-container {
+            background: #0f172a;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-container {
+                padding: 0 16px;
+            }
+
+            .nav-menu {
+                display: none;
+            }
+
+            .page-container {
+                padding: 24px 16px;
+            }
+
+            .grid-cols-2,
+            .grid-cols-3,
+            .grid-cols-4 {
+                grid-template-columns: 1fr;
+            }
+
+            .page-title {
+                font-size: 1.5rem;
+            }
+
+            .stat-number {
+                font-size: 2rem;
+            }
+
+            .table th,
+            .table td {
+                padding: 12px 8px;
+                font-size: 0.75rem;
+            }
+        }
+
+        /* Mobile Navigation */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #64748b;
+        }
+
+        body.dark-mode .mobile-menu-btn {
+            color: #94a3b8;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .nav-menu {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: #ffffff;
+                border-top: 1px solid #e2e8f0;
+                flex-direction: column;
+                padding: 16px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            }
+
+            body.dark-mode .nav-menu {
+                background: #1e293b;
+                border-top-color: #334155;
+            }
+
+            .nav-menu.show {
+                display: flex;
+            }
+
+            .nav-link {
+                width: 100%;
+                justify-content: flex-start;
+            }
+        }
+
+        /* Loading States */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            color: #64748b;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e2e8f0;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 12px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            background: #10b981;
+            color: #ffffff;
+            padding: 16px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            font-weight: 500;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.error {
+            background: #ef4444;
+        }
+
+        .notification.warning {
+            background: #f59e0b;
+        }
+
+        /* Form Validation */
+        .form-error {
+            color: #ef4444;
+            font-size: 0.75rem;
+            margin-top: 4px;
+            display: none;
+        }
+
+        .form-input.error,
+        .form-textarea.error,
+        .form-select.error {
+            border-color: #ef4444;
+            box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+        }
+
+        /* Export Button */
+        .export-btn {
+            background: #059669;
+            color: #ffffff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .export-btn:hover {
+            background: #047857;
+        }
+
+        /* Loading Overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .loading-overlay.show {
+            display: flex;
+        }
+
+        .loading-content {
+            background: #ffffff;
+            padding: 32px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        body.dark-mode .loading-content {
+            background: #1e293b;
+        }
+
+        /* Focus Styles for Accessibility */
+        .btn:focus,
+        .nav-link:focus,
+        .theme-toggle:focus {
+            outline: 2px solid #3b82f6;
+            outline-offset: 2px;
+        }
+
+        /* Skip Link */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 6px;
+            background: #3b82f6;
+            color: #ffffff;
+            padding: 8px;
+            text-decoration: none;
+            border-radius: 4px;
+            z-index: 1000;
+        }
+
+        .skip-link:focus {
+            top: 6px;
+        }
+
+        /* Screen Reader Only Content */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* High Contrast Mode Support */
+        @media (prefers-contrast: high) {
+            .card {
+                border: 2px solid;
+            }
+            
+            .btn {
+                border: 2px solid;
+            }
+            
+            .form-input, .form-textarea, .form-select {
+                border: 2px solid;
+            }
+        }
+
+        /* Reduced Motion Support */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+            
+            .spinner {
+                animation: none;
+            }
+        }
+
+        /* Focus Indicators */
+        .focus-visible {
+            outline: 3px solid #3b82f6;
+            outline-offset: 2px;
+        }
+
+        /* Export Controls */
+        .export-controls {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <!-- Skip Link for Accessibility -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    
+    <!-- Navigation -->
+    <nav class="navbar" role="navigation" aria-label="Main navigation">
+        <div class="nav-container">
+            <a href="#" class="nav-brand" aria-label="MarketMate Dashboard Home">
+                <span>MarketMate</span>
+            </a>
+            
+            <ul class="nav-menu" id="navMenu" role="menubar">
+                <li class="nav-item" role="none">
+                    <a href="#" class="nav-link active" onclick="showPage('dashboard')" role="menuitem" aria-current="page">
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item" role="none">
+                    <a href="#" class="nav-link" onclick="showPage('analytics')" role="menuitem">
+                        <span>Analytics</span>
+                    </a>
+                </li>
+                <li class="nav-item" role="none">
+                    <a href="#" class="nav-link" onclick="showPage('reviews')" role="menuitem">
+                        <span>Reviews</span>
+                    </a>
+                </li>
+                <li class="nav-item" role="none">
+                    <a href="#" class="nav-link" onclick="showPage('settings')" role="menuitem">
+                        <span>Settings</span>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="nav-actions">
+                <button class="theme-toggle" onclick="toggleTheme()" aria-label="Toggle dark mode">
+                    <span id="themeText">Dark Mode</span>
+                </button>
+                <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Toggle mobile menu" aria-expanded="false">
+                    ☰
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="page-container">
+        <!-- Dashboard Page -->
+        <div id="dashboard" class="page active">
+            <main id="main-content" role="main">
+            <div class="page-header">
+                <h1 class="page-title">Dashboard Overview</h1>
+                <p class="page-subtitle">Monitor your customer sentiment and business reputation in real-time</p>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-4" style="margin-bottom: 32px;">
+                <div class="stat-card primary">
+                    <div class="stat-number" id="reputationScore">0.0</div>
+                    <div class="stat-label">Reputation Score</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalReviews">0</div>
+                    <div class="stat-label">Total Reviews</div>
+                </div>
+                <div class="stat-card success">
+                    <div class="stat-number" id="positivePercent">0%</div>
+                    <div class="stat-label">Positive Reviews</div>
+                </div>
+                <div class="stat-card danger">
+                    <div class="stat-number" id="negativePercent">0%</div>
+                    <div class="stat-label">Negative Reviews</div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="grid grid-cols-2" style="margin-bottom: 32px;">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Sentiment Trend</h2>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Sentiment Distribution</h2>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="distributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Data Import and Quick Add -->
+            <div class="grid grid-cols-2" style="margin-bottom: 32px;">
+                <!-- Bulk Import -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Bulk Import Data</h2>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <label class="form-label" for="importFile">Upload CSV/JSON File</label>
+                        <input type="file" id="importFile" class="form-input" accept=".csv,.json" aria-describedby="importHelp">
+                        <div id="importHelp" style="font-size: 0.75rem; color: #64748b; margin-top: 4px;">
+                            Supports CSV (business,review,date) or JSON format. Max 10MB.
+                        </div>
+                    </div>
+                    <div style="margin-bottom: 20px;">
+                        <button type="button" class="btn btn-primary btn-full" id="importBtn" disabled>
+                            <span>📁 Import Reviews</span>
+                        </button>
+                    </div>
+                    <div style="padding: 12px; background: #f8fafc; border-radius: 6px; font-size: 0.75rem; color: #64748b;">
+                        <strong>Sample CSV format:</strong><br>
+                        business,review,date<br>
+                        "Coffee Shop","Great coffee!","2024-01-15"<br>
+                        "Restaurant","Food was cold","2024-01-16"
+                    </div>
+                </div>
+
+                <!-- Quick Add Review -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Quick Add Review</h2>
+                    </div>
+                    <form id="quickReviewForm" novalidate>
+                        <div class="form-group">
+                            <label class="form-label" for="quickBusiness">Business Name</label>
+                            <input type="text" id="quickBusiness" class="form-input" placeholder="Enter business name..." required aria-describedby="businessError">
+                            <div id="businessError" class="form-error" role="alert">Please enter a business name</div>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="quickReview">Review Text</label>
+                            <textarea id="quickReview" class="form-textarea" placeholder="Enter customer review..." required minlength="10" maxlength="500" aria-describedby="reviewError reviewCount"></textarea>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+                                <div id="reviewError" class="form-error" role="alert">Review must be between 10-500 characters</div>
+                                <div id="reviewCount" style="font-size: 0.75rem; color: #64748b;">0/500</div>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-full" id="analyzeBtn">
+                            <span>Analyze Sentiment</span>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Analytics Page -->
+        <div id="analytics" class="page">
+            <div class="page-header">
+                <h1 class="page-title">Advanced Analytics</h1>
+                <p class="page-subtitle">Deep dive into sentiment patterns and business insights</p>
+            </div>
+
+            <div class="grid grid-cols-1" style="margin-bottom: 32px;">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Detailed Sentiment Analysis</h2>
+                    </div>
+                    <div class="chart-container" style="height: 400px;">
+                        <canvas id="detailedChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Business Performance</h2>
+                    </div>
+                    <div class="chart-container" style="height: 250px;">
+                        <canvas id="businessChart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Time Analysis</h2>
+                    </div>
+                    <div class="chart-container" style="height: 250px;">
+                        <canvas id="timeChart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Key Insights</h2>
+                    </div>
+                    <div style="padding: 0;">
+                        <div style="padding: 20px; border-bottom: 1px solid #f1f5f9;">
+                            <div style="font-weight: 600; color: #10b981; margin-bottom: 8px; font-size: 0.875rem;">PEAK POSITIVE HOURS</div>
+                            <div style="color: #1e293b; font-size: 1.125rem; font-weight: 600;">2:00 PM - 4:00 PM</div>
+                        </div>
+                        <div style="padding: 20px; border-bottom: 1px solid #f1f5f9;">
+                            <div style="font-weight: 600; color: #ef4444; margin-bottom: 8px; font-size: 0.875rem;">COMMON COMPLAINTS</div>
+                            <div style="color: #1e293b; font-size: 1.125rem; font-weight: 600;">Wait Times & Service</div>
+                        </div>
+                        <div style="padding: 20px;">
+                            <div style="font-weight: 600; color: #3b82f6; margin-bottom: 8px; font-size: 0.875rem;">TOP KEYWORDS</div>
+                            <div style="color: #1e293b; font-size: 1.125rem; font-weight: 600;">Excellent, Friendly, Clean</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reviews Page -->
+        <div id="reviews" class="page">
+            <div class="page-header">
+                <div style="display: flex; justify-content: space-between; align-items: flex-end;">
+                    <div>
+                        <h1 class="page-title">Review Management</h1>
+                        <p class="page-subtitle">View, analyze, and manage all customer reviews</p>
+                    </div>
+                    <div class="export-controls" role="group" aria-labelledby="export-heading">
+                        <span id="export-heading" class="sr-only">Export Options</span>
+                        <button class="export-btn" onclick="exportReviews('csv')" aria-label="Export reviews as CSV file">
+                            📊 CSV
+                        </button>
+                        <button class="export-btn" onclick="exportReviews('json')" aria-label="Export reviews as JSON file" style="margin-left: 8px;">
+                            📄 JSON
+                        </button>
+                        <button class="export-btn" onclick="exportReviews('pdf')" aria-label="Export reviews as PDF report" style="margin-left: 8px;">
+                            📋 Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Filters -->
+            <div class="card" style="margin-bottom: 32px;">
+                <div class="card-header">
+                    <h2 class="card-title">Filter Reviews</h2>
+                </div>
+                <div class="grid grid-cols-4">
+                    <div class="form-group">
+                        <label class="form-label" for="filterSentiment">Sentiment</label>
+                        <select id="filterSentiment" class="form-select">
+                            <option value="">All Sentiments</option>
+                            <option value="positive">Positive</option>
+                            <option value="neutral">Neutral</option>
+                            <option value="negative">Negative</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="filterBusiness">Business</label>
+                        <select id="filterBusiness" class="form-select">
+                            <option value="">All Businesses</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="filterDate">Date</label>
+                        <input type="date" id="filterDate" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="filterKeyword">Search</label>
+                        <input type="text" id="filterKeyword" class="form-input" placeholder="Search reviews...">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reviews Table -->
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Business</th>
+                            <th>Review</th>
+                            <th>Sentiment</th>
+                            <th>Score</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reviewsTableBody">
+                        <!-- Reviews will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Settings Page -->
+        <div id="settings" class="page">
+            <div class="page-header">
+                <h1 class="page-title">Settings</h1>
+                <p class="page-subtitle">Configure your dashboard preferences and integrations</p>
+            </div>
+
+            <div class="grid grid-cols-2">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">General Settings</h2>
+                    </div>
+                    <form id="settingsForm">
+                        <div class="form-group">
+                            <label class="form-label" for="companyName">Company Name</label>
+                            <input type="text" id="companyName" class="form-input" value="MarketMate Analytics">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="emailNotifications">Email Notifications</label>
+                            <select id="emailNotifications" class="form-select">
+                                <option value="all">All notifications</option>
+                                <option value="important">Important only</option>
+                                <option value="none">None</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="dataRetention">Data Retention (days)</label>
+                            <input type="number" id="dataRetention" class="form-input" value="365">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-full">
+                            <span>Save Settings</span>
+                        </button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Platform Integrations</h2>
+                    </div>
+                    <div style="padding: 20px 0;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 16px; background: #f8fafc; border-radius: 8px;">
+                            <div>
+                                <div style="font-weight: 600; margin-bottom: 4px;">🛒 Amazon Reviews API</div>
+                                <div style="color: #64748b; font-size: 0.875rem;">Import product reviews from Amazon marketplace</div>
+                            </div>
+                            <button class="btn btn-success" onclick="connectIntegration('amazon')">Connect</button>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 16px; background: #f8fafc; border-radius: 8px;">
+                            <div>
+                                <div style="font-weight: 600; margin-bottom: 4px;">📧 Email Notifications</div>
+                                <div style="color: #64748b; font-size: 0.875rem;">Get sentiment alerts via email</div>
+                            </div>
+                            <button class="btn btn-success" onclick="connectIntegration('email')">Connect</button>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 16px; background: #f8fafc; border-radius: 8px;">
+                            <div>
+                                <div style="font-weight: 600; margin-bottom: 4px;">📊 Google Analytics</div>
+                                <div style="color: #64748b; font-size: 0.875rem;">Track sentiment metrics in GA4</div>
+                            </div>
+                            <button class="btn btn-success" onclick="connectIntegration('analytics')">Connect</button>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px; background: #f8fafc; border-radius: 8px;">
+                            <div>
+                                <div style="font-weight: 600; margin-bottom: 4px;">🔗 Webhook Integration</div>
+                                <div style="color: #64748b; font-size: 0.875rem;">Send real-time data to your systems</div>
+                            </div>
+                            <button class="btn btn-success" onclick="connectIntegration('webhook')">Connect</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay" role="dialog" aria-labelledby="loadingText" aria-modal="true">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <div id="loadingText">Processing your request...</div>
+        </div>
+    </div>
+
+    <!-- Notification -->
+    <div class="notification" id="notification" role="alert" aria-live="polite">
+        <strong>Success!</strong> Your changes have been saved.
+    </div>
+
+    <script>
+        // Fresh start - no sample data
+        let reviews = [];
+
+        let currentPage = 'dashboard';
+        let charts = {};
+
+        // Navigation functions
+        function showPage(pageId) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // Remove active class from all nav links
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            // Show selected page
+            document.getElementById(pageId).classList.add('active');
+            
+            // Add active class to clicked nav link
+            event.target.closest('.nav-link').classList.add('active');
+            
+            currentPage = pageId;
+            
+            // Initialize page-specific content
+            if (pageId === 'analytics') {
+                initializeAnalytics();
+            } else if (pageId === 'reviews') {
+                renderReviewsTable();
+            }
+        }
+
+        function toggleMobileMenu() {
+            const navMenu = document.getElementById('navMenu');
+            navMenu.classList.toggle('show');
+        }
+
+        // Theme toggle
+        function toggleTheme() {
+            const body = document.body;
+            const themeText = document.getElementById('themeText');
+            
+            body.classList.toggle('dark-mode');
+            
+            if (body.classList.contains('dark-mode')) {
+                themeText.textContent = 'Light Mode';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                themeText.textContent = 'Dark Mode';
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        // Load saved theme
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                document.getElementById('themeText').textContent = 'Light Mode';
+            }
+        }
+
+        // Advanced NLP-inspired sentiment analysis with multiple techniques
+        class SentimentAnalyzer {
+            constructor() {
+                this.positiveWords = new Map([
+                    ['excellent', 3], ['amazing', 3], ['outstanding', 3], ['fantastic', 3], ['brilliant', 3],
+                    ['wonderful', 2.5], ['great', 2], ['awesome', 2.5], ['perfect', 3], ['love', 2.5],
+                    ['good', 1.5], ['nice', 1], ['happy', 2], ['satisfied', 2], ['recommend', 2],
+                    ['delicious', 2], ['friendly', 1.5], ['clean', 1], ['comfortable', 1.5], ['helpful', 2],
+                    ['professional', 1.5], ['quality', 2], ['fresh', 1.5], ['tasty', 2], ['beautiful', 2],
+                    ['impressive', 2.5], ['superb', 3], ['magnificent', 3], ['exceptional', 3]
+                ]);
+                
+                this.negativeWords = new Map([
+                    ['terrible', -3], ['awful', -3], ['horrible', -3], ['disgusting', -3], ['worst', -3],
+                    ['hate', -2.5], ['bad', -2], ['poor', -2], ['disappointing', -2.5], ['rude', -2],
+                    ['slow', -1.5], ['expensive', -1], ['dirty', -2], ['cold', -1], ['overpriced', -2],
+                    ['unfriendly', -2], ['unprofessional', -2.5], ['stale', -1.5], ['bland', -1.5], ['noisy', -1],
+                    ['cramped', -1], ['broken', -2], ['useless', -2.5], ['pathetic', -3], ['disaster', -3]
+                ]);
+                
+                this.intensifiers = new Map([
+                    ['very', 1.5], ['extremely', 2], ['really', 1.3], ['absolutely', 2], ['completely', 1.8],
+                    ['totally', 1.6], ['incredibly', 2], ['quite', 1.2], ['rather', 1.1], ['fairly', 1.1],
+                    ['super', 1.7], ['ultra', 1.9], ['highly', 1.4], ['exceptionally', 2.2]
+                ]);
+                
+                this.negators = ['not', 'never', 'no', 'nothing', 'nowhere', 'nobody', 'none', 'neither', 'nor', 'barely', 'hardly', 'scarcely'];
+                
+                this.emoticons = new Map([
+                    ['😊', 2], ['😃', 2], ['😄', 2.5], ['😁', 2], ['🙂', 1.5], ['😍', 3], ['🥰', 2.5], ['😘', 2],
+                    ['👍', 2], ['👌', 1.5], ['💯', 3], ['🔥', 2.5], ['⭐', 2], ['✨', 1.5],
+                    ['😞', -2], ['😢', -2.5], ['😭', -3], ['😠', -2.5], ['😡', -3], ['🤬', -3], ['👎', -2],
+                    ['💩', -2.5], ['🤮', -3], ['😤', -2], ['😒', -1.5], ['🙄', -1]
+                ]);
+                
+                this.contextPatterns = [
+                    { pattern: /but\s+(.+)$/i, weight: 1.5 }, // "good but expensive" - emphasize after 'but'
+                    { pattern: /however\s+(.+)$/i, weight: 1.5 },
+                    { pattern: /although\s+(.+)$/i, weight: 1.3 },
+                    { pattern: /except\s+(.+)$/i, weight: 1.3 }
+                ];
+            }
+            
+            analyze(text) {
+                try {
+                    const originalText = text;
+                    text = text.toLowerCase().trim();
+                    
+                    if (!text) {
+                        return { sentiment: 'neutral', score: 0.0, confidence: 0.0, keywords: [], errors: ['Empty text'] };
+                    }
+                    
+                    // Extract emoticons first
+                    const emoticonScore = this.analyzeEmoticons(originalText);
+                    
+                    // Clean text for word analysis
+                    const cleanText = text.replace(/[^\w\s]/g, ' ').replace(/\s+/g, ' ');
+                    const words = cleanText.split(' ').filter(word => word.length > 0);
+                    
+                    if (words.length === 0) {
+                        return { sentiment: 'neutral', score: 0.0, confidence: 0.0, keywords: [], errors: ['No valid words'] };
+                    }
+                    
+                    // Analyze context patterns
+                    const contextScore = this.analyzeContext(text);
+                    
+                    // Word-level sentiment analysis
+                    const wordAnalysis = this.analyzeWords(words);
+                    
+                    // Combine scores with weights
+                    const totalScore = (wordAnalysis.score * 0.7) + (emoticonScore * 0.2) + (contextScore * 0.1);
+                    const confidence = this.calculateConfidence(words, wordAnalysis.keywords, emoticonScore !== 0);
+                    
+                    // Determine final sentiment
+                    let sentiment;
+                    if (totalScore > 0.4) sentiment = 'positive';
+                    else if (totalScore < -0.4) sentiment = 'negative';
+                    else sentiment = 'neutral';
+                    
+                    return {
+                        sentiment,
+                        score: Math.round(totalScore * 100) / 100,
+                        confidence: Math.round(confidence * 100) / 100,
+                        keywords: wordAnalysis.keywords,
+                        breakdown: {
+                            words: wordAnalysis.score,
+                            emoticons: emoticonScore,
+                            context: contextScore
+                        }
+                    };
+                } catch (error) {
+                    console.error('Sentiment analysis error:', error);
+                    return { 
+                        sentiment: 'neutral', 
+                        score: 0.0, 
+                        confidence: 0.0, 
+                        keywords: [], 
+                        errors: [error.message] 
+                    };
+                }
+            }
+            
+            analyzeWords(words) {
+                let totalScore = 0;
+                let foundKeywords = [];
+                
+                for (let i = 0; i < words.length; i++) {
+                    const word = words[i];
+                    const prevWord = i > 0 ? words[i - 1] : '';
+                    const prev2Word = i > 1 ? words[i - 2] : '';
+                    
+                    let wordScore = 0;
+                    let multiplier = 1;
+                    let isNegated = false;
+                    
+                    // Check for sentiment words
+                    if (this.positiveWords.has(word)) {
+                        wordScore = this.positiveWords.get(word);
+                        foundKeywords.push({ word, sentiment: 'positive', score: wordScore });
+                    } else if (this.negativeWords.has(word)) {
+                        wordScore = this.negativeWords.get(word);
+                        foundKeywords.push({ word, sentiment: 'negative', score: wordScore });
+                    }
+                    
+                    if (wordScore !== 0) {
+                        // Check for intensifiers
+                        if (this.intensifiers.has(prevWord)) {
+                            multiplier = this.intensifiers.get(prevWord);
+                        }
+                        
+                        // Check for negation (within 2 words)
+                        if (this.negators.includes(prevWord) || this.negators.includes(prev2Word)) {
+                            isNegated = true;
+                        }
+                        
+                        // Apply transformations
+                        if (isNegated) {
+                            wordScore = -wordScore * 0.8; // Negation reduces intensity slightly
+                        }
+                        
+                        totalScore += wordScore * multiplier;
+                    }
+                }
+                
+                // Normalize by text length
+                const normalizedScore = words.length > 0 ? totalScore / Math.sqrt(words.length) : 0;
+                
+                return {
+                    score: Math.max(-3, Math.min(3, normalizedScore)), // Clamp between -3 and 3
+                    keywords: foundKeywords
+                };
+            }
+            
+            analyzeEmoticons(text) {
+                let score = 0;
+                for (const [emoticon, value] of this.emoticons) {
+                    const count = (text.match(new RegExp(emoticon, 'g')) || []).length;
+                    score += count * value;
+                }
+                return Math.max(-2, Math.min(2, score * 0.3)); // Limit emoticon influence
+            }
+            
+            analyzeContext(text) {
+                let contextScore = 0;
+                
+                for (const pattern of this.contextPatterns) {
+                    const match = text.match(pattern.pattern);
+                    if (match) {
+                        const afterPhrase = match[1];
+                        const afterWords = afterPhrase.split(' ');
+                        const afterAnalysis = this.analyzeWords(afterWords);
+                        contextScore += afterAnalysis.score * pattern.weight;
+                    }
+                }
+                
+                return Math.max(-1, Math.min(1, contextScore * 0.2));
+            }
+            
+            calculateConfidence(words, keywords, hasEmoticons) {
+                const textLength = words.length;
+                const keywordDensity = keywords.length / Math.max(textLength, 1);
+                const lengthFactor = Math.min(textLength / 20, 1); // More confidence with longer text
+                const keywordFactor = Math.min(keywordDensity * 3, 1);
+                const emoticonBonus = hasEmoticons ? 0.1 : 0;
+                
+                return Math.min(0.3 + (lengthFactor * 0.4) + (keywordFactor * 0.3) + emoticonBonus, 1.0);
+            }
+        }
+        
+        // Initialize sentiment analyzer
+        const sentimentAnalyzer = new SentimentAnalyzer();
+        
+        function analyzeSentiment(text) {
+            return sentimentAnalyzer.analyze(text);
+        }
+
+        // Form validation functions
+        function validateForm(formId) {
+            const form = document.getElementById(formId);
+            const inputs = form.querySelectorAll('input[required], select[required], textarea[required]');
+            let isValid = true;
+            
+            inputs.forEach(input => {
+                const errorElement = document.getElementById(input.getAttribute('aria-describedby')?.split(' ')[0]);
+                
+                if (!input.value.trim()) {
+                    showFieldError(input, errorElement, 'This field is required');
+                    isValid = false;
+                } else if (input.type === 'textarea' && input.hasAttribute('minlength')) {
+                    const minLength = parseInt(input.getAttribute('minlength'));
+                    if (input.value.length < minLength) {
+                        showFieldError(input, errorElement, `Minimum ${minLength} characters required`);
+                        isValid = false;
+                    } else {
+                        clearFieldError(input, errorElement);
+                    }
+                } else {
+                    clearFieldError(input, errorElement);
+                }
+            });
+            
+            return isValid;
+        }
+        
+        function showFieldError(input, errorElement, message) {
+            input.classList.add('error');
+            if (errorElement) {
+                errorElement.textContent = message;
+                errorElement.style.display = 'block';
+            }
+        }
+        
+        function clearFieldError(input, errorElement) {
+            input.classList.remove('error');
+            if (errorElement) {
+                errorElement.style.display = 'none';
+            }
+        }
+
+        // Enhanced export functionality with multiple formats
+        class ExportService {
+            static async exportReviews(format = 'csv') {
+                try {
+                    showLoading(`Generating ${format.toUpperCase()} export...`);
+                    
+                    // Simulate processing time
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+                    
+                    switch (format.toLowerCase()) {
+                        case 'csv':
+                            return this.generateCSV();
+                        case 'json':
+                            return this.generateJSON();
+                        case 'pdf':
+                            return this.generatePDFReport();
+                        default:
+                            throw new Error(`Unsupported export format: ${format}`);
+                    }
+                } catch (error) {
+                    console.error('Export error:', error);
+                    throw error;
+                }
+            }
+            
+            static generateCSV() {
+                const headers = [
+                    'Date', 'Business', 'Review', 'Sentiment', 'Score', 'Confidence', 
+                    'Keywords', 'Word_Score', 'Emoticon_Score', 'Context_Score'
+                ];
+                
+                const rows = reviews.map(review => [
+                    review.date,
+                    review.business,
+                    `"${review.comment.replace(/"/g, '""')}"`,
+                    review.sentiment,
+                    review.score,
+                    review.confidence || 'N/A',
+                    review.keywords ? review.keywords.map(k => k.word).join(';') : '',
+                    review.breakdown ? review.breakdown.words || 'N/A' : 'N/A',
+                    review.breakdown ? review.breakdown.emoticons || 'N/A' : 'N/A',
+                    review.breakdown ? review.breakdown.context || 'N/A' : 'N/A'
+                ]);
+                
+                const csvContent = [headers, ...rows].map(row => row.join(',')).join('\n');
+                this.downloadFile(csvContent, 'reviews-export.csv', 'text/csv');
+                return 'CSV export completed successfully!';
+            }
+            
+            static generateJSON() {
+                const exportData = {
+                    exportDate: new Date().toISOString(),
+                    totalReviews: reviews.length,
+                    summary: this.generateSummary(),
+                    reviews: reviews.map(review => ({
+                        ...review,
+                        exportNote: 'Generated by MarketMate Analytics'
+                    }))
+                };
+                
+                const jsonContent = JSON.stringify(exportData, null, 2);
+                this.downloadFile(jsonContent, 'reviews-export.json', 'application/json');
+                return 'JSON export completed successfully!';
+            }
+            
+            static generatePDFReport() {
+                // Simulate PDF generation (in real app, use libraries like jsPDF)
+                const summary = this.generateSummary();
+                const reportContent = this.generateHTMLReport(summary);
+                
+                // For demo purposes, download as HTML (in real app, convert to PDF)
+                this.downloadFile(reportContent, 'reviews-report.html', 'text/html');
+                return 'PDF report generated successfully! (Downloaded as HTML for demo)';
+            }
+            
+            static generateSummary() {
+                if (reviews.length === 0) {
+                    return {
+                        totalReviews: 0,
+                        averageScore: 0,
+                        sentimentDistribution: { positive: 0, neutral: 0, negative: 0 },
+                        topBusinesses: [],
+                        averageConfidence: 0
+                    };
+                }
+                
+                const totalScore = reviews.reduce((sum, r) => sum + r.score, 0);
+                const totalConfidence = reviews.reduce((sum, r) => sum + (r.confidence || 0), 0);
+                
+                const sentimentCounts = reviews.reduce((acc, r) => {
+                    acc[r.sentiment] = (acc[r.sentiment] || 0) + 1;
+                    return acc;
+                }, {});
+                
+                const businessCounts = reviews.reduce((acc, r) => {
+                    acc[r.business] = (acc[r.business] || 0) + 1;
+                    return acc;
+                }, {});
+                
+                const topBusinesses = Object.entries(businessCounts)
+                    .sort(([,a], [,b]) => b - a)
+                    .slice(0, 5)
+                    .map(([business, count]) => ({ business, count }));
+                
+                return {
+                    totalReviews: reviews.length,
+                    averageScore: totalScore / reviews.length,
+                    sentimentDistribution: {
+                        positive: sentimentCounts.positive || 0,
+                        neutral: sentimentCounts.neutral || 0,
+                        negative: sentimentCounts.negative || 0
+                    },
+                    topBusinesses,
+                    averageConfidence: totalConfidence / reviews.length
+                };
+            }
+            
+            static generateHTMLReport(summary) {
+                return `
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <title>MarketMate Analytics Report</title>
+                    <style>
+                        body { font-family: Arial, sans-serif; margin: 40px; }
+                        .header { text-align: center; margin-bottom: 40px; }
+                        .summary { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px; }
+                        .metric { display: inline-block; margin: 10px 20px; text-align: center; }
+                        .metric-value { font-size: 2em; font-weight: bold; color: #007bff; }
+                        .metric-label { font-size: 0.9em; color: #666; }
+                        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+                        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #ddd; }
+                        th { background-color: #f8f9fa; }
+                    </style>
+                </head>
+                <body>
+                    <div class="header">
+                        <h1>MarketMate Analytics Report</h1>
+                        <p>Generated on ${new Date().toLocaleDateString()}</p>
+                    </div>
+                    
+                    <div class="summary">
+                        <h2>Summary</h2>
+                        <div class="metric">
+                            <div class="metric-value">${summary.totalReviews}</div>
+                            <div class="metric-label">Total Reviews</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">${summary.averageScore.toFixed(2)}</div>
+                            <div class="metric-label">Average Score</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value">${(summary.averageConfidence * 100).toFixed(0)}%</div>
+                            <div class="metric-label">Avg Confidence</div>
+                        </div>
+                    </div>
+                    
+                    <h2>Recent Reviews</h2>
+                    <table>
+                        <thead>
+                            <tr><th>Date</th><th>Business</th><th>Sentiment</th><th>Score</th><th>Review</th></tr>
+                        </thead>
+                        <tbody>
+                            ${reviews.slice(-10).map(r => `
+                                <tr>
+                                    <td>${r.date}</td>
+                                    <td>${r.business}</td>
+                                    <td>${r.sentiment}</td>
+                                    <td>${r.score.toFixed(2)}</td>
+                                    <td>${r.comment.substring(0, 100)}...</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </body>
+                </html>
+                `;
+            }
+            
+            static downloadFile(content, filename, mimeType) {
+                const blob = new Blob([content], { type: `${mimeType};charset=utf-8;` });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', filename);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            }
+        }
+        
+        // Enhanced export function with format selection
+        async function exportReviews(format = 'csv') {
+            try {
+                const message = await ExportService.exportReviews(format);
+                hideLoading();
+                showNotification(message);
+            } catch (error) {
+                hideLoading();
+                showNotification(`Export failed: ${error.message}`, 'error');
+            }
+        }
+
+        // Loading overlay functions
+        function showLoading(message = 'Processing...') {
+            const overlay = document.getElementById('loadingOverlay');
+            const text = document.getElementById('loadingText');
+            text.textContent = message;
+            overlay.classList.add('show');
+        }
+        
+        function hideLoading() {
+            const overlay = document.getElementById('loadingOverlay');
+            overlay.classList.remove('show');
+        }
+
+        // Initialize charts
+        function initializeCharts() {
+            // Trend Chart
+            const trendCtx = document.getElementById('trendChart').getContext('2d');
+            charts.trend = new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Sentiment Score',
+                        data: [],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, min: -1, max: 1 }
+                    }
+                }
+            });
+
+            // Distribution Chart
+            const distributionCtx = document.getElementById('distributionChart').getContext('2d');
+            charts.distribution = new Chart(distributionCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Positive', 'Neutral', 'Negative'],
+                    datasets: [{
+                        data: [0, 0, 0],
+                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+
+        // Initialize analytics page
+        function initializeAnalytics() {
+            if (!charts.detailed) {
+                setTimeout(() => {
+                    const detailedCtx = document.getElementById('detailedChart').getContext('2d');
+                    charts.detailed = new Chart(detailedCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: [],
+                            datasets: [{
+                                label: 'Average Sentiment',
+                                data: [],
+                                backgroundColor: ['#10b981', '#ef4444', '#10b981', '#f59e0b'],
+                                borderRadius: 8
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: { y: { beginAtZero: true, min: -1, max: 1 } }
+                        }
+                    });
+                }, 100);
+            }
+            
+            if (!charts.business) {
+                setTimeout(() => {
+                    const businessCtx = document.getElementById('businessChart').getContext('2d');
+                    charts.business = new Chart(businessCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: [],
+                            datasets: [{
+                                data: [],
+                                backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'],
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { 
+                                legend: { 
+                                    position: 'bottom',
+                                    labels: { font: { size: 10 } }
+                                } 
+                            }
+                        }
+                    });
+                }, 150);
+            }
+            
+            if (!charts.time) {
+                setTimeout(() => {
+                    const timeCtx = document.getElementById('timeChart').getContext('2d');
+                    charts.time = new Chart(timeCtx, {
+                        type: 'line',
+                        data: {
+                            labels: [],
+                            datasets: [{
+                                label: 'Review Volume',
+                                data: [],
+                                borderColor: '#3b82f6',
+                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: { y: { beginAtZero: true } }
+                        }
+                    });
+                }, 200);
+            }
+        }
+
+        // Performance-optimized statistics with caching and virtual scrolling
+        class PerformanceManager {
+            constructor() {
+                this.statsCache = null;
+                this.lastCacheUpdate = 0;
+                this.cacheTimeout = 5000; // 5 seconds
+                this.virtualScrollConfig = {
+                    itemHeight: 60,
+                    containerHeight: 400,
+                    buffer: 5
+                };
+            }
+            
+            // Cached statistics calculation
+            getStats(forceRefresh = false) {
+                const now = Date.now();
+                
+                if (!forceRefresh && this.statsCache && (now - this.lastCacheUpdate) < this.cacheTimeout) {
+                    return this.statsCache;
+                }
+                
+                const totalReviews = reviews.length;
+                
+                if (totalReviews === 0) {
+                    this.statsCache = {
+                        totalReviews: 0,
+                        reputationScore: 0.0,
+                        positivePercent: 0,
+                        negativePercent: 0,
+                        neutralPercent: 0,
+                        averageConfidence: 0,
+                        sentimentCounts: { positive: 0, neutral: 0, negative: 0 }
+                    };
+                } else {
+                    // Use single pass for efficiency
+                    let totalScore = 0;
+                    let totalConfidence = 0;
+                    const sentimentCounts = { positive: 0, neutral: 0, negative: 0 };
+                    
+                    for (const review of reviews) {
+                        totalScore += review.score;
+                        totalConfidence += review.confidence || 0;
+                        sentimentCounts[review.sentiment]++;
+                    }
+                    
+                    this.statsCache = {
+                        totalReviews,
+                        reputationScore: totalScore / totalReviews,
+                        positivePercent: Math.round((sentimentCounts.positive / totalReviews) * 100),
+                        negativePercent: Math.round((sentimentCounts.negative / totalReviews) * 100),
+                        neutralPercent: Math.round((sentimentCounts.neutral / totalReviews) * 100),
+                        averageConfidence: totalConfidence / totalReviews,
+                        sentimentCounts
+                    };
+                }
+                
+                this.lastCacheUpdate = now;
+                return this.statsCache;
+            }
+            
+            // Debounced update function
+            debounce(func, wait) {
+                let timeout;
+                return function executedFunction(...args) {
+                    const later = () => {
+                        clearTimeout(timeout);
+                        func(...args);
+                    };
+                    clearTimeout(timeout);
+                    timeout = setTimeout(later, wait);
+                };
+            }
+            
+            // Virtual scrolling for large datasets
+            setupVirtualScrolling(containerId, items, renderItem) {
+                const container = document.getElementById(containerId);
+                if (!container || items.length < 50) return; // Only use for large datasets
+                
+                const { itemHeight, containerHeight, buffer } = this.virtualScrollConfig;
+                const visibleCount = Math.ceil(containerHeight / itemHeight);
+                const totalHeight = items.length * itemHeight;
+                
+                container.style.height = `${containerHeight}px`;
+                container.style.overflowY = 'auto';
+                
+                const viewport = document.createElement('div');
+                viewport.style.height = `${totalHeight}px`;
+                viewport.style.position = 'relative';
+                
+                const content = document.createElement('div');
+                content.style.position = 'absolute';
+                content.style.top = '0';
+                content.style.width = '100%';
+                
+                viewport.appendChild(content);
+                container.innerHTML = '';
+                container.appendChild(viewport);
+                
+                let startIndex = 0;
+                
+                const updateVisibleItems = () => {
+                    const scrollTop = container.scrollTop;
+                    startIndex = Math.floor(scrollTop / itemHeight);
+                    const endIndex = Math.min(startIndex + visibleCount + buffer, items.length);
+                    
+                    content.style.transform = `translateY(${startIndex * itemHeight}px)`;
+                    content.innerHTML = '';
+                    
+                    for (let i = startIndex; i < endIndex; i++) {
+                        const item = renderItem(items[i], i);
+                        content.appendChild(item);
+                    }
+                };
+                
+                container.addEventListener('scroll', this.debounce(updateVisibleItems, 16)); // ~60fps
+                updateVisibleItems();
+            }
+        }
+        
+        const performanceManager = new PerformanceManager();
+        
+        // Optimized stats update function
+        function updateStats() {
+            const stats = performanceManager.getStats();
+            
+            // Batch DOM updates
+            requestAnimationFrame(() => {
+                document.getElementById('reputationScore').textContent = stats.reputationScore.toFixed(1);
+                document.getElementById('totalReviews').textContent = stats.totalReviews;
+                document.getElementById('positivePercent').textContent = stats.positivePercent + '%';
+                document.getElementById('negativePercent').textContent = stats.negativePercent + '%';
+            });
+        }
+        
+        // Optimized chart updates
+        function updateCharts() {
+            if (!charts.trend || !charts.distribution) return;
+            
+            const stats = performanceManager.getStats();
+            
+            // Update distribution chart
+            charts.distribution.data.datasets[0].data = [
+                stats.sentimentCounts.positive,
+                stats.sentimentCounts.neutral,
+                stats.sentimentCounts.negative
+            ];
+            charts.distribution.update('none'); // Skip animations for performance
+            
+            // Update trend chart with recent data
+            if (reviews.length > 0) {
+                const recentReviews = reviews.slice(-10);
+                charts.trend.data.labels = recentReviews.map((_, i) => `Review ${i + 1}`);
+                charts.trend.data.datasets[0].data = recentReviews.map(r => r.score);
+                charts.trend.update('none');
+            }
+        }
+
+        // Render reviews table
+        function renderReviewsTable() {
+            const tbody = document.getElementById('reviewsTableBody');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            
+            reviews.slice().reverse().forEach(review => {
+                const row = document.createElement('tr');
+                
+                let badgeClass = 'badge-success';
+                if (review.sentiment === 'negative') {
+                    badgeClass = 'badge-danger';
+                } else if (review.sentiment === 'neutral') {
+                    badgeClass = 'badge-warning';
+                }
+                
+                row.innerHTML = `
+                    <td>${review.date}</td>
+                    <td>${review.business}</td>
+                    <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${review.comment}">${review.comment}</td>
+                    <td>
+                        <span class="badge ${badgeClass}">
+                            ${review.sentiment}
+                        </span>
+                    </td>
+                    <td>${review.score > 0 ? '+' : ''}${review.score.toFixed(2)}</td>
+                    <td>
+                        <button class="btn btn-primary" style="padding: 6px 12px; font-size: 0.75rem;">View</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Show notification
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.innerHTML = `<strong>${type === 'success' ? 'Success!' : 'Error!'}</strong> ${message}`;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Character counter for review textarea
+        document.getElementById('quickReview').addEventListener('input', function() {
+            const counter = document.getElementById('reviewCount');
+            const length = this.value.length;
+            counter.textContent = `${length}/500`;
+            
+            if (length > 500) {
+                counter.style.color = '#ef4444';
+            } else if (length > 400) {
+                counter.style.color = '#f59e0b';
+            } else {
+                counter.style.color = '#64748b';
+            }
+        });
+
+        // Enhanced error handling and API simulation
+        class APIService {
+            static async simulateAnalysis(text, business) {
+                return new Promise((resolve, reject) => {
+                    // Simulate network delay
+                    const delay = Math.random() * 1000 + 500;
+                    
+                    setTimeout(() => {
+                        try {
+                            // Simulate occasional API failures for realistic error handling
+                            if (Math.random() < 0.05) { // 5% failure rate
+                                reject(new Error('Service temporarily unavailable. Please try again.'));
+                                return;
+                            }
+                            
+                            const analysis = analyzeSentiment(text);
+                            
+                            if (analysis.errors && analysis.errors.length > 0) {
+                                reject(new Error(`Analysis failed: ${analysis.errors.join(', ')}`));
+                                return;
+                            }
+                            
+                            resolve({
+                                ...analysis,
+                                business,
+                                timestamp: new Date().toISOString(),
+                                processingTime: delay
+                            });
+                        } catch (error) {
+                            reject(new Error(`Unexpected error during analysis: ${error.message}`));
+                        }
+                    }, delay);
+                });
+            }
+            
+            static async saveReview(reviewData) {
+                return new Promise((resolve, reject) => {
+                    setTimeout(() => {
+                        try {
+                            // Simulate storage operation
+                            if (Math.random() < 0.02) { // 2% failure rate
+                                reject(new Error('Failed to save review. Please try again.'));
+                                return;
+                            }
+                            
+                            const savedReview = {
+                                id: reviews.length + 1,
+                                date: new Date().toISOString().split('T')[0],
+                                ...reviewData
+                            };
+                            
+                            reviews.push(savedReview);
+                            resolve(savedReview);
+                        } catch (error) {
+                            reject(new Error(`Storage error: ${error.message}`));
+                        }
+                    }, 200);
+                });
+            }
+        }
+        
+        // Bulk Import Service for large datasets
+        class BulkImportService {
+            static async processFile(file) {
+                return new Promise((resolve, reject) => {
+                    if (!file) {
+                        reject(new Error('No file selected'));
+                        return;
+                    }
+                    
+                    if (file.size > 10 * 1024 * 1024) { // 10MB limit
+                        reject(new Error('File size exceeds 10MB limit'));
+                        return;
+                    }
+                    
+                    const reader = new FileReader();
+                    
+                    reader.onload = async (e) => {
+                        try {
+                            const content = e.target.result;
+                            const extension = file.name.split('.').pop().toLowerCase();
+                            
+                            let data;
+                            if (extension === 'csv') {
+                                data = this.parseCSV(content);
+                            } else if (extension === 'json') {
+                                data = this.parseJSON(content);
+                            } else {
+                                throw new Error('Unsupported file format. Please use CSV or JSON.');
+                            }
+                            
+                            resolve(data);
+                        } catch (error) {
+                            reject(error);
+                        }
+                    };
+                    
+                    reader.onerror = () => {
+                        reject(new Error('Failed to read file'));
+                    };
+                    
+                    reader.readAsText(file);
+                });
+            }
+            
+            static parseCSV(content) {
+                const lines = content.trim().split('\n');
+                if (lines.length < 2) {
+                    throw new Error('CSV file must have at least a header and one data row');
+                }
+                
+                const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+                const expectedHeaders = ['business', 'review', 'date'];
+                
+                // Flexible header matching
+                const headerMap = {};
+                expectedHeaders.forEach(expected => {
+                    const found = headers.find(h => 
+                        h.toLowerCase().includes(expected) || 
+                        expected.includes(h.toLowerCase())
+                    );
+                    if (found) {
+                        headerMap[expected] = headers.indexOf(found);
+                    }
+                });
+                
+                if (!headerMap.business || !headerMap.review) {
+                    throw new Error('CSV must contain "business" and "review" columns');
+                }
+                
+                const data = [];
+                for (let i = 1; i < lines.length; i++) {
+                    const values = this.parseCSVLine(lines[i]);
+                    if (values.length >= 2) {
+                        data.push({
+                            business: values[headerMap.business]?.replace(/"/g, '').trim(),
+                            review: values[headerMap.review]?.replace(/"/g, '').trim(),
+                            date: headerMap.date ? values[headerMap.date]?.replace(/"/g, '').trim() : new Date().toISOString().split('T')[0]
+                        });
+                    }
+                }
+                
+                return data.filter(item => item.business && item.review);
+            }
+            
+            static parseCSVLine(line) {
+                const result = [];
+                let current = '';
+                let inQuotes = false;
+                
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    
+                    if (char === '"') {
+                        inQuotes = !inQuotes;
+                    } else if (char === ',' && !inQuotes) {
+                        result.push(current);
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+                
+                result.push(current);
+                return result;
+            }
+            
+            static parseJSON(content) {
+                try {
+                    const parsed = JSON.parse(content);
+                    let data = Array.isArray(parsed) ? parsed : [parsed];
+                    
+                    // Validate and normalize JSON data
+                    data = data.map(item => ({
+                        business: item.business || item.Business || item.company || item.name || 'Unknown',
+                        review: item.review || item.Review || item.comment || item.text || item.content,
+                        date: item.date || item.Date || item.timestamp || new Date().toISOString().split('T')[0]
+                    }));
+                    
+                    return data.filter(item => item.business && item.review);
+                } catch (error) {
+                    throw new Error('Invalid JSON format: ' + error.message);
+                }
+            }
+            
+            static async processBatch(data, batchSize = 50) {
+                const results = [];
+                const errors = [];
+                
+                for (let i = 0; i < data.length; i += batchSize) {
+                    const batch = data.slice(i, i + batchSize);
+                    
+                    try {
+                        const batchResults = await Promise.allSettled(
+                            batch.map(async (item, index) => {
+                                try {
+                                    const analysis = await APIService.simulateAnalysis(item.review, item.business);
+                                    return {
+                                        ...item,
+                                        sentiment: analysis.sentiment,
+                                        score: analysis.score,
+                                        confidence: analysis.confidence,
+                                        keywords: analysis.keywords || [],
+                                        breakdown: analysis.breakdown || {},
+                                        id: reviews.length + results.length + index + 1
+                                    };
+                                } catch (error) {
+                                    throw new Error(`Row ${i + index + 1}: ${error.message}`);
+                                }
+                            })
+                        );
+                        
+                        batchResults.forEach((result, index) => {
+                            if (result.status === 'fulfilled') {
+                                results.push(result.value);
+                            } else {
+                                errors.push(`Row ${i + index + 1}: ${result.reason.message}`);
+                            }
+                        });
+                        
+                        // Update progress
+                        const progress = Math.min(100, Math.round(((i + batchSize) / data.length) * 100));
+                        showLoading(`Processing batch ${Math.floor(i/batchSize) + 1}... ${progress}%`);
+                        
+                        // Small delay to prevent overwhelming the system
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                        
+                    } catch (error) {
+                        errors.push(`Batch ${Math.floor(i/batchSize) + 1}: ${error.message}`);
+                    }
+                }
+                
+                return { results, errors };
+            }
+        }
+        
+        // File input handler
+        document.getElementById('importFile').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const importBtn = document.getElementById('importBtn');
+            
+            if (file) {
+                importBtn.disabled = false;
+                importBtn.innerHTML = `<span>📁 Import ${file.name}</span>`;
+            } else {
+                importBtn.disabled = true;
+                importBtn.innerHTML = '<span>📁 Import Reviews</span>';
+            }
+        });
+        
+        // Import button handler
+        document.getElementById('importBtn').addEventListener('click', async function() {
+            const fileInput = document.getElementById('importFile');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showNotification('Please select a file first', 'error');
+                return;
+            }
+            
+            const importBtn = this;
+            importBtn.disabled = true;
+            importBtn.innerHTML = '<div class="spinner"></div> Processing...';
+            
+            try {
+                showLoading('Reading file...');
+                
+                // Step 1: Parse file
+                const rawData = await BulkImportService.processFile(file);
+                
+                if (rawData.length === 0) {
+                    throw new Error('No valid data found in file');
+                }
+                
+                if (rawData.length > 1000) {
+                    const proceed = confirm(`This file contains ${rawData.length} reviews. Large imports may take several minutes. Continue?`);
+                    if (!proceed) {
+                        throw new Error('Import cancelled by user');
+                    }
+                }
+                
+                showLoading(`Processing ${rawData.length} reviews...`);
+                
+                // Step 2: Process in batches
+                const { results, errors } = await BulkImportService.processBatch(rawData);
+                
+                // Step 3: Add successful results to reviews array
+                reviews.push(...results);
+                
+                // Step 4: Update UI
+                performanceManager.getStats(true); // Force cache refresh
+                updateStats();
+                updateCharts();
+                renderReviewsTable();
+                
+                // Step 5: Show results
+                let message = `Successfully imported ${results.length} reviews!`;
+                if (errors.length > 0) {
+                    message += ` ${errors.length} errors occurred.`;
+                    console.warn('Import errors:', errors);
+                }
+                
+                showNotification(message, errors.length > 0 ? 'warning' : 'success');
+                
+                // Reset file input
+                fileInput.value = '';
+                
+            } catch (error) {
+                console.error('Import error:', error);
+                showNotification(error.message || 'Import failed. Please check your file format.', 'error');
+            } finally {
+                importBtn.disabled = false;
+                importBtn.innerHTML = '<span>📁 Import Reviews</span>';
+                hideLoading();
+            }
+        });
+        
+        // Integration connection handler
+        function connectIntegration(type) {
+            showLoading(`Connecting to ${type}...`);
+            
+            setTimeout(() => {
+                hideLoading();
+                showNotification(`${type.charAt(0).toUpperCase() + type.slice(1)} integration connected successfully!`);
+            }, 1500);
+        }
+
+        // Enhanced form handler with comprehensive error handling
+        document.getElementById('quickReviewForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            if (!validateForm('quickReviewForm')) {
+                showNotification('Please fix the errors before submitting', 'error');
+                return;
+            }
+            
+            const business = document.getElementById('quickBusiness').value.trim();
+            const reviewText = document.getElementById('quickReview').value.trim();
+            const submitBtn = document.getElementById('analyzeBtn');
+            
+            // Disable form during processing
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<div class="spinner"></div> Analyzing...';
+            showLoading('Analyzing sentiment...');
+            
+            try {
+                // Step 1: Analyze sentiment
+                const analysis = await APIService.simulateAnalysis(reviewText, business);
+                
+                showLoading('Saving review...');
+                
+                // Step 2: Save review
+                const savedReview = await APIService.saveReview({
+                    business: analysis.business,
+                    comment: reviewText,
+                    sentiment: analysis.sentiment,
+                    score: analysis.score,
+                    confidence: analysis.confidence,
+                    keywords: analysis.keywords || [],
+                    breakdown: analysis.breakdown || {}
+                });
+                
+                // Step 3: Update UI
+                updateStats();
+                updateCharts();
+                
+                // Reset form
+                this.reset();
+                document.getElementById('reviewCount').textContent = '0/500';
+                
+                // Show detailed success message
+                const keywordText = analysis.keywords && analysis.keywords.length > 0 
+                    ? ` Key words: ${analysis.keywords.map(k => k.word).join(', ')}`
+                    : '';
+                
+                showNotification(
+                    `Review analyzed successfully! Sentiment: ${analysis.sentiment.toUpperCase()}, ` +
+                    `Score: ${analysis.score.toFixed(2)}, Confidence: ${(analysis.confidence * 100).toFixed(0)}%.${keywordText}`,
+                    'success'
+                );
+                
+            } catch (error) {
+                console.error('Review submission error:', error);
+                showNotification(error.message || 'An unexpected error occurred. Please try again.', 'error');
+                
+                // Log error for debugging (in real app, send to error tracking service)
+                if (window.console && console.error) {
+                    console.error('Full error details:', {
+                        message: error.message,
+                        stack: error.stack,
+                        timestamp: new Date().toISOString(),
+                        userInput: { business, reviewText: reviewText.substring(0, 100) + '...' }
+                    });
+                }
+            } finally {
+                // Re-enable form
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = '<span>Analyze Sentiment</span>';
+                hideLoading();
+            }
+        });
+
+        document.getElementById('settingsForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            showLoading('Saving settings...');
+            
+            setTimeout(() => {
+                hideLoading();
+                showNotification('Settings saved successfully!');
+            }, 800);
+        });
+
+        // Keyboard navigation improvements
+        document.addEventListener('keydown', function(e) {
+            // ESC key closes loading overlay
+            if (e.key === 'Escape') {
+                const overlay = document.getElementById('loadingOverlay');
+                if (overlay.classList.contains('show')) {
+                    hideLoading();
+                }
+            }
+            
+            // Arrow keys for navigation menu
+            if (e.target.closest('.nav-menu')) {
+                const links = document.querySelectorAll('.nav-link');
+                const currentIndex = Array.from(links).findIndex(link => link === document.activeElement);
+                
+                if (e.key === 'ArrowRight' && currentIndex < links.length - 1) {
+                    e.preventDefault();
+                    links[currentIndex + 1].focus();
+                } else if (e.key === 'ArrowLeft' && currentIndex > 0) {
+                    e.preventDefault();
+                    links[currentIndex - 1].focus();
+                }
+            }
+        });
+
+        // Initialize app
+        window.addEventListener('load', function() {
+            loadTheme();
+            updateStats();
+            initializeCharts();
+            renderReviewsTable();
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9899b148f2c14da5',t:'MTc1OTYzMzQ3Ni4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

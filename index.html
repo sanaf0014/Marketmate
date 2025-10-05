@@ -1,0 +1,1312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Sentiment Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f8fafc;
+            min-height: 100vh;
+            transition: all 0.3s ease;
+            color: #334155;
+        }
+
+        body.dark-mode {
+            background: #0f172a;
+            color: #e2e8f0;
+        }
+
+        /* Navigation Styles */
+        .navbar {
+            background: #ffffff;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        body.dark-mode .navbar {
+            background: #1e293b;
+            border-bottom-color: #334155;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 24px;
+            height: 70px;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            text-decoration: none;
+        }
+
+        body.dark-mode .nav-brand {
+            color: #f1f5f9;
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+            gap: 8px;
+        }
+
+        .nav-item {
+            position: relative;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            color: #64748b;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .nav-link:hover {
+            background: #f1f5f9;
+            color: #1e293b;
+        }
+
+        .nav-link.active {
+            background: #3b82f6;
+            color: #ffffff;
+        }
+
+        body.dark-mode .nav-link {
+            color: #94a3b8;
+        }
+
+        body.dark-mode .nav-link:hover {
+            background: #334155;
+            color: #f1f5f9;
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .theme-toggle {
+            background: #f1f5f9;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            color: #64748b;
+        }
+
+        .theme-toggle:hover {
+            background: #e2e8f0;
+        }
+
+        body.dark-mode .theme-toggle {
+            background: #334155;
+            border-color: #475569;
+            color: #94a3b8;
+        }
+
+        body.dark-mode .theme-toggle:hover {
+            background: #475569;
+        }
+
+        /* Page Container */
+        .page-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* Page Header */
+        .page-header {
+            margin-bottom: 32px;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin: 0 0 8px 0;
+        }
+
+        body.dark-mode .page-title {
+            color: #f1f5f9;
+        }
+
+        .page-subtitle {
+            color: #64748b;
+            font-size: 1.125rem;
+            margin: 0;
+        }
+
+        body.dark-mode .page-subtitle {
+            color: #94a3b8;
+        }
+
+        /* Card Styles */
+        .card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            transition: all 0.2s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        body.dark-mode .card {
+            background: #1e293b;
+            border-color: #334155;
+        }
+
+        .card-header {
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #1e293b;
+            margin: 0;
+        }
+
+        body.dark-mode .card-title {
+            color: #f1f5f9;
+        }
+
+        /* Grid Layouts */
+        .grid {
+            display: grid;
+            gap: 24px;
+        }
+
+        .grid-cols-1 { grid-template-columns: 1fr; }
+        .grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+        .grid-cols-3 { grid-template-columns: repeat(3, 1fr); }
+        .grid-cols-4 { grid-template-columns: repeat(4, 1fr); }
+
+        /* Stats Cards */
+        .stat-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+            transition: all 0.2s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        body.dark-mode .stat-card {
+            background: #1e293b;
+            border-color: #334155;
+        }
+
+        .stat-card.primary {
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            border-color: #3b82f6;
+            color: #ffffff;
+        }
+
+        .stat-card.success {
+            background: linear-gradient(135deg, #10b981, #059669);
+            border-color: #10b981;
+            color: #ffffff;
+        }
+
+        .stat-card.warning {
+            background: linear-gradient(135deg, #f59e0b, #d97706);
+            border-color: #f59e0b;
+            color: #ffffff;
+        }
+
+        .stat-card.danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+            border-color: #ef4444;
+            color: #ffffff;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            font-weight: 500;
+            opacity: 0.9;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Form Styles */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #374151;
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+
+        body.dark-mode .form-label {
+            color: #d1d5db;
+        }
+
+        .form-input,
+        .form-textarea,
+        .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s ease;
+            box-sizing: border-box;
+            background: #ffffff;
+            color: #374151;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        body.dark-mode .form-input,
+        body.dark-mode .form-textarea,
+        body.dark-mode .form-select {
+            background: #374151;
+            border-color: #4b5563;
+            color: #f9fafb;
+        }
+
+        body.dark-mode .form-input:focus,
+        body.dark-mode .form-textarea:focus,
+        body.dark-mode .form-select:focus {
+            border-color: #3b82f6;
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* Button Styles */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+
+        .btn-success {
+            background: #10b981;
+            color: #ffffff;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+            transform: translateY(-1px);
+        }
+
+        .btn-full {
+            width: 100%;
+        }
+
+        /* Table Styles */
+        .table-container {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        body.dark-mode .table-container {
+            background: #1e293b;
+            border-color: #334155;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th,
+        .table td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        body.dark-mode .table th,
+        body.dark-mode .table td {
+            border-bottom-color: #334155;
+        }
+
+        .table th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: #374151;
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        body.dark-mode .table th {
+            background: #0f172a;
+            color: #d1d5db;
+        }
+
+        .table td {
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
+        body.dark-mode .table td {
+            color: #9ca3af;
+        }
+
+        .table tr:hover {
+            background: #f8fafc;
+        }
+
+        body.dark-mode .table tr:hover {
+            background: #334155;
+        }
+
+        /* Badge Styles */
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-success {
+            background: #dcfce7;
+            color: #166534;
+        }
+
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .badge-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        body.dark-mode .badge-success {
+            background: #14532d;
+            color: #bbf7d0;
+        }
+
+        body.dark-mode .badge-warning {
+            background: #451a03;
+            color: #fde68a;
+        }
+
+        body.dark-mode .badge-danger {
+            background: #450a0a;
+            color: #fecaca;
+        }
+
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            background: #f8fafc;
+            border-radius: 8px;
+            padding: 16px;
+        }
+
+        body.dark-mode .chart-container {
+            background: #0f172a;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-container {
+                padding: 0 16px;
+            }
+
+            .nav-menu {
+                display: none;
+            }
+
+            .page-container {
+                padding: 24px 16px;
+            }
+
+            .grid-cols-2,
+            .grid-cols-3,
+            .grid-cols-4 {
+                grid-template-columns: 1fr;
+            }
+
+            .page-title {
+                font-size: 1.5rem;
+            }
+
+            .stat-number {
+                font-size: 2rem;
+            }
+
+            .table th,
+            .table td {
+                padding: 12px 8px;
+                font-size: 0.75rem;
+            }
+        }
+
+        /* Mobile Navigation */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #64748b;
+        }
+
+        body.dark-mode .mobile-menu-btn {
+            color: #94a3b8;
+        }
+
+        @media (max-width: 768px) {
+            .mobile-menu-btn {
+                display: block;
+            }
+
+            .nav-menu {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: #ffffff;
+                border-top: 1px solid #e2e8f0;
+                flex-direction: column;
+                padding: 16px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            }
+
+            body.dark-mode .nav-menu {
+                background: #1e293b;
+                border-top-color: #334155;
+            }
+
+            .nav-menu.show {
+                display: flex;
+            }
+
+            .nav-link {
+                width: 100%;
+                justify-content: flex-start;
+            }
+        }
+
+        /* Loading States */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            color: #64748b;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e2e8f0;
+            border-top-color: #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 12px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Notification */
+        .notification {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            background: #10b981;
+            color: #ffffff;
+            padding: 16px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+            font-weight: 500;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.error {
+            background: #ef4444;
+        }
+
+        .notification.warning {
+            background: #f59e0b;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="#" class="nav-brand">
+                <span>MarketMate</span>
+            </a>
+            
+            <ul class="nav-menu" id="navMenu">
+                <li class="nav-item">
+                    <a href="#" class="nav-link active" onclick="showPage('dashboard')">
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" onclick="showPage('analytics')">
+                        <span>Analytics</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" onclick="showPage('reviews')">
+                        <span>Reviews</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link" onclick="showPage('settings')">
+                        <span>Settings</span>
+                    </a>
+                </li>
+            </ul>
+
+            <div class="nav-actions">
+                <button class="theme-toggle" onclick="toggleTheme()">
+                    <span id="themeText">Dark Mode</span>
+                </button>
+                <button class="mobile-menu-btn" onclick="toggleMobileMenu()">
+                    ☰
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="page-container">
+        <!-- Dashboard Page -->
+        <div id="dashboard" class="page active">
+            <div class="page-header">
+                <h1 class="page-title">Dashboard Overview</h1>
+                <p class="page-subtitle">Monitor your customer sentiment and business reputation in real-time</p>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-4" style="margin-bottom: 32px;">
+                <div class="stat-card primary">
+                    <div class="stat-number" id="reputationScore">8.2</div>
+                    <div class="stat-label">Reputation Score</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalReviews">127</div>
+                    <div class="stat-label">Total Reviews</div>
+                </div>
+                <div class="stat-card success">
+                    <div class="stat-number" id="positivePercent">73%</div>
+                    <div class="stat-label">Positive Reviews</div>
+                </div>
+                <div class="stat-card danger">
+                    <div class="stat-number" id="negativePercent">15%</div>
+                    <div class="stat-label">Negative Reviews</div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="grid grid-cols-2" style="margin-bottom: 32px;">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Sentiment Trend</h2>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Sentiment Distribution</h2>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="distributionChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Add Review -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Quick Add Review</h2>
+                </div>
+                <form id="quickReviewForm" class="grid grid-cols-2">
+                    <div class="form-group">
+                        <label class="form-label" for="quickBusiness">Business</label>
+                        <select id="quickBusiness" class="form-select" required>
+                            <option value="">Select Business</option>
+                            <option value="Sunset Bistro">Sunset Bistro</option>
+                            <option value="TechGear Store">TechGear Store</option>
+                            <option value="Grand Plaza Hotel">Grand Plaza Hotel</option>
+                            <option value="Morning Brew Cafe">Morning Brew Cafe</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="quickReview">Review Text</label>
+                        <textarea id="quickReview" class="form-textarea" placeholder="Enter customer review..." required></textarea>
+                    </div>
+                    <div style="grid-column: 1 / -1;">
+                        <button type="submit" class="btn btn-primary btn-full">
+                            <span>Analyze Sentiment</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Analytics Page -->
+        <div id="analytics" class="page">
+            <div class="page-header">
+                <h1 class="page-title">Advanced Analytics</h1>
+                <p class="page-subtitle">Deep dive into sentiment patterns and business insights</p>
+            </div>
+
+            <div class="grid grid-cols-1" style="margin-bottom: 32px;">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Detailed Sentiment Analysis</h2>
+                    </div>
+                    <div class="chart-container" style="height: 400px;">
+                        <canvas id="detailedChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Business Performance</h2>
+                    </div>
+                    <div class="chart-container" style="height: 250px;">
+                        <canvas id="businessChart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Time Analysis</h2>
+                    </div>
+                    <div class="chart-container" style="height: 250px;">
+                        <canvas id="timeChart"></canvas>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Key Insights</h2>
+                    </div>
+                    <div style="padding: 0;">
+                        <div style="padding: 20px; border-bottom: 1px solid #f1f5f9;">
+                            <div style="font-weight: 600; color: #10b981; margin-bottom: 8px; font-size: 0.875rem;">PEAK POSITIVE HOURS</div>
+                            <div style="color: #1e293b; font-size: 1.125rem; font-weight: 600;">2:00 PM - 4:00 PM</div>
+                        </div>
+                        <div style="padding: 20px; border-bottom: 1px solid #f1f5f9;">
+                            <div style="font-weight: 600; color: #ef4444; margin-bottom: 8px; font-size: 0.875rem;">COMMON COMPLAINTS</div>
+                            <div style="color: #1e293b; font-size: 1.125rem; font-weight: 600;">Wait Times & Service</div>
+                        </div>
+                        <div style="padding: 20px;">
+                            <div style="font-weight: 600; color: #3b82f6; margin-bottom: 8px; font-size: 0.875rem;">TOP KEYWORDS</div>
+                            <div style="color: #1e293b; font-size: 1.125rem; font-weight: 600;">Excellent, Friendly, Clean</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reviews Page -->
+        <div id="reviews" class="page">
+            <div class="page-header">
+                <h1 class="page-title">Review Management</h1>
+                <p class="page-subtitle">View, analyze, and manage all customer reviews</p>
+            </div>
+
+            <!-- Filters -->
+            <div class="card" style="margin-bottom: 32px;">
+                <div class="card-header">
+                    <h2 class="card-title">Filter Reviews</h2>
+                </div>
+                <div class="grid grid-cols-4">
+                    <div class="form-group">
+                        <label class="form-label" for="filterSentiment">Sentiment</label>
+                        <select id="filterSentiment" class="form-select">
+                            <option value="">All Sentiments</option>
+                            <option value="positive">Positive</option>
+                            <option value="neutral">Neutral</option>
+                            <option value="negative">Negative</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="filterBusiness">Business</label>
+                        <select id="filterBusiness" class="form-select">
+                            <option value="">All Businesses</option>
+                            <option value="Sunset Bistro">Sunset Bistro</option>
+                            <option value="TechGear Store">TechGear Store</option>
+                            <option value="Grand Plaza Hotel">Grand Plaza Hotel</option>
+                            <option value="Morning Brew Cafe">Morning Brew Cafe</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="filterDate">Date</label>
+                        <input type="date" id="filterDate" class="form-input">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="filterKeyword">Search</label>
+                        <input type="text" id="filterKeyword" class="form-input" placeholder="Search reviews...">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reviews Table -->
+            <div class="table-container">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Business</th>
+                            <th>Review</th>
+                            <th>Sentiment</th>
+                            <th>Score</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reviewsTableBody">
+                        <!-- Reviews will be populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Settings Page -->
+        <div id="settings" class="page">
+            <div class="page-header">
+                <h1 class="page-title">Settings</h1>
+                <p class="page-subtitle">Configure your dashboard preferences and integrations</p>
+            </div>
+
+            <div class="grid grid-cols-2">
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">General Settings</h2>
+                    </div>
+                    <form id="settingsForm">
+                        <div class="form-group">
+                            <label class="form-label" for="companyName">Company Name</label>
+                            <input type="text" id="companyName" class="form-input" value="MarketMate Analytics">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="emailNotifications">Email Notifications</label>
+                            <select id="emailNotifications" class="form-select">
+                                <option value="all">All notifications</option>
+                                <option value="important">Important only</option>
+                                <option value="none">None</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="dataRetention">Data Retention (days)</label>
+                            <input type="number" id="dataRetention" class="form-input" value="365">
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-full">
+                            <span>Save Settings</span>
+                        </button>
+                    </form>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h2 class="card-title">Integrations</h2>
+                    </div>
+                    <div style="padding: 20px 0;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 16px; background: #f8fafc; border-radius: 8px;">
+                            <div>
+                                <div style="font-weight: 600; margin-bottom: 4px;">Google Reviews API</div>
+                                <div style="color: #64748b; font-size: 0.875rem;">Automatically sync Google reviews</div>
+                            </div>
+                            <button class="btn btn-success">Connect</button>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 16px; background: #f8fafc; border-radius: 8px;">
+                            <div>
+                                <div style="font-weight: 600; margin-bottom: 4px;">Yelp Business API</div>
+                                <div style="color: #64748b; font-size: 0.875rem;">Import Yelp reviews and ratings</div>
+                            </div>
+                            <button class="btn btn-success">Connect</button>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px; background: #f8fafc; border-radius: 8px;">
+                            <div>
+                                <div style="font-weight: 600; margin-bottom: 4px;">Slack Notifications</div>
+                                <div style="color: #64748b; font-size: 0.875rem;">Get alerts in your Slack workspace</div>
+                            </div>
+                            <button class="btn btn-success">Connect</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification">
+        <strong>Success!</strong> Your changes have been saved.
+    </div>
+
+    <script>
+        // Sample data
+        let reviews = [
+            {
+                id: 1,
+                date: '2024-01-15',
+                business: 'Sunset Bistro',
+                comment: 'The food was absolutely amazing! Great service and wonderful atmosphere.',
+                sentiment: 'positive',
+                score: 0.85
+            },
+            {
+                id: 2,
+                date: '2024-01-15',
+                business: 'TechGear Store',
+                comment: 'Terrible experience! The staff was rude and unhelpful.',
+                sentiment: 'negative',
+                score: -0.72
+            },
+            {
+                id: 3,
+                date: '2024-01-15',
+                business: 'Morning Brew Cafe',
+                comment: 'Coffee was okay, nothing special but decent price.',
+                sentiment: 'neutral',
+                score: 0.1
+            },
+            {
+                id: 4,
+                date: '2024-01-14',
+                business: 'Grand Plaza Hotel',
+                comment: 'Excellent stay! Clean rooms, friendly staff, and great location.',
+                sentiment: 'positive',
+                score: 0.91
+            },
+            {
+                id: 5,
+                date: '2024-01-14',
+                business: 'Sunset Bistro',
+                comment: 'Food was cold and service was slow. Very disappointing.',
+                sentiment: 'negative',
+                score: -0.68
+            }
+        ];
+
+        let currentPage = 'dashboard';
+        let charts = {};
+
+        // Navigation functions
+        function showPage(pageId) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // Remove active class from all nav links
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            // Show selected page
+            document.getElementById(pageId).classList.add('active');
+            
+            // Add active class to clicked nav link
+            event.target.closest('.nav-link').classList.add('active');
+            
+            currentPage = pageId;
+            
+            // Initialize page-specific content
+            if (pageId === 'analytics') {
+                initializeAnalytics();
+            } else if (pageId === 'reviews') {
+                renderReviewsTable();
+            }
+        }
+
+        function toggleMobileMenu() {
+            const navMenu = document.getElementById('navMenu');
+            navMenu.classList.toggle('show');
+        }
+
+        // Theme toggle
+        function toggleTheme() {
+            const body = document.body;
+            const themeText = document.getElementById('themeText');
+            
+            body.classList.toggle('dark-mode');
+            
+            if (body.classList.contains('dark-mode')) {
+                themeText.textContent = 'Light Mode';
+                localStorage.setItem('theme', 'dark');
+            } else {
+                themeText.textContent = 'Dark Mode';
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        // Load saved theme
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.body.classList.add('dark-mode');
+                document.getElementById('themeText').textContent = 'Light Mode';
+            }
+        }
+
+        // Sentiment analysis
+        function analyzeSentiment(text) {
+            const positiveWords = ['excellent', 'amazing', 'great', 'wonderful', 'fantastic', 'love', 'perfect', 'outstanding', 'brilliant', 'awesome', 'good', 'nice', 'happy', 'satisfied', 'recommend'];
+            const negativeWords = ['terrible', 'awful', 'horrible', 'bad', 'worst', 'hate', 'disgusting', 'poor', 'disappointing', 'rude', 'slow', 'expensive', 'dirty', 'cold'];
+            
+            const words = text.toLowerCase().split(/\s+/);
+            let positiveCount = 0;
+            let negativeCount = 0;
+            
+            words.forEach(word => {
+                if (positiveWords.some(pw => word.includes(pw))) positiveCount++;
+                if (negativeWords.some(nw => word.includes(nw))) negativeCount++;
+            });
+            
+            const totalSentimentWords = positiveCount + negativeCount;
+            if (totalSentimentWords === 0) {
+                return { sentiment: 'neutral', score: 0.0 };
+            }
+            
+            const score = (positiveCount - negativeCount) / Math.max(totalSentimentWords, 1);
+            let sentiment;
+            if (score > 0.2) sentiment = 'positive';
+            else if (score < -0.2) sentiment = 'negative';
+            else sentiment = 'neutral';
+            
+            return { sentiment, score: Math.round(score * 100) / 100 };
+        }
+
+        // Initialize charts
+        function initializeCharts() {
+            // Trend Chart
+            const trendCtx = document.getElementById('trendChart').getContext('2d');
+            charts.trend = new Chart(trendCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan 10', 'Jan 11', 'Jan 12', 'Jan 13', 'Jan 14', 'Jan 15'],
+                    datasets: [{
+                        label: 'Sentiment Score',
+                        data: [0.2, 0.4, -0.1, 0.6, 0.3, 0.5],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, min: -1, max: 1 }
+                    }
+                }
+            });
+
+            // Distribution Chart
+            const distributionCtx = document.getElementById('distributionChart').getContext('2d');
+            charts.distribution = new Chart(distributionCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Positive', 'Neutral', 'Negative'],
+                    datasets: [{
+                        data: [73, 12, 15],
+                        backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom' } }
+                }
+            });
+        }
+
+        // Initialize analytics page
+        function initializeAnalytics() {
+            if (!charts.detailed) {
+                setTimeout(() => {
+                    const detailedCtx = document.getElementById('detailedChart').getContext('2d');
+                    charts.detailed = new Chart(detailedCtx, {
+                        type: 'bar',
+                        data: {
+                            labels: ['Sunset Bistro', 'TechGear Store', 'Grand Plaza Hotel', 'Morning Brew Cafe'],
+                            datasets: [{
+                                label: 'Average Sentiment',
+                                data: [0.7, -0.2, 0.8, 0.4],
+                                backgroundColor: ['#10b981', '#ef4444', '#10b981', '#f59e0b'],
+                                borderRadius: 8
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: { y: { beginAtZero: true, min: -1, max: 1 } }
+                        }
+                    });
+                }, 100);
+            }
+            
+            if (!charts.business) {
+                setTimeout(() => {
+                    const businessCtx = document.getElementById('businessChart').getContext('2d');
+                    charts.business = new Chart(businessCtx, {
+                        type: 'doughnut',
+                        data: {
+                            labels: ['Sunset Bistro', 'TechGear Store', 'Grand Plaza Hotel', 'Morning Brew Cafe'],
+                            datasets: [{
+                                data: [35, 20, 30, 15],
+                                backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444'],
+                                borderWidth: 0
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { 
+                                legend: { 
+                                    position: 'bottom',
+                                    labels: { font: { size: 10 } }
+                                } 
+                            }
+                        }
+                    });
+                }, 150);
+            }
+            
+            if (!charts.time) {
+                setTimeout(() => {
+                    const timeCtx = document.getElementById('timeChart').getContext('2d');
+                    charts.time = new Chart(timeCtx, {
+                        type: 'line',
+                        data: {
+                            labels: ['9AM', '12PM', '3PM', '6PM', '9PM'],
+                            datasets: [{
+                                label: 'Review Volume',
+                                data: [12, 25, 18, 30, 15],
+                                borderColor: '#3b82f6',
+                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.4
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: { legend: { display: false } },
+                            scales: { y: { beginAtZero: true } }
+                        }
+                    });
+                }, 200);
+            }
+        }
+
+        // Update dashboard stats
+        function updateStats() {
+            const totalReviews = reviews.length;
+            const positiveReviews = reviews.filter(r => r.sentiment === 'positive').length;
+            const negativeReviews = reviews.filter(r => r.sentiment === 'negative').length;
+            
+            const avgScore = reviews.reduce((sum, r) => sum + r.score, 0) / totalReviews;
+            const reputationScore = Math.max(0, Math.min(10, 5 + avgScore * 3));
+            
+            document.getElementById('reputationScore').textContent = reputationScore.toFixed(1);
+            document.getElementById('totalReviews').textContent = totalReviews;
+            document.getElementById('positivePercent').textContent = Math.round((positiveReviews / totalReviews) * 100) + '%';
+            document.getElementById('negativePercent').textContent = Math.round((negativeReviews / totalReviews) * 100) + '%';
+        }
+
+        // Render reviews table
+        function renderReviewsTable() {
+            const tbody = document.getElementById('reviewsTableBody');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            
+            reviews.slice().reverse().forEach(review => {
+                const row = document.createElement('tr');
+                
+                let badgeClass = 'badge-success';
+                if (review.sentiment === 'negative') {
+                    badgeClass = 'badge-danger';
+                } else if (review.sentiment === 'neutral') {
+                    badgeClass = 'badge-warning';
+                }
+                
+                row.innerHTML = `
+                    <td>${review.date}</td>
+                    <td>${review.business}</td>
+                    <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${review.comment}">${review.comment}</td>
+                    <td>
+                        <span class="badge ${badgeClass}">
+                            ${review.sentiment}
+                        </span>
+                    </td>
+                    <td>${review.score > 0 ? '+' : ''}${review.score.toFixed(2)}</td>
+                    <td>
+                        <button class="btn btn-primary" style="padding: 6px 12px; font-size: 0.75rem;">View</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // Show notification
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.innerHTML = `<strong>${type === 'success' ? 'Success!' : 'Error!'}</strong> ${message}`;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // Form handlers
+        document.getElementById('quickReviewForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const business = document.getElementById('quickBusiness').value;
+            const reviewText = document.getElementById('quickReview').value;
+            
+            const analysis = analyzeSentiment(reviewText);
+            
+            const newReview = {
+                id: reviews.length + 1,
+                date: new Date().toISOString().split('T')[0],
+                business: business,
+                comment: reviewText,
+                sentiment: analysis.sentiment,
+                score: analysis.score
+            };
+            
+            reviews.push(newReview);
+            updateStats();
+            
+            this.reset();
+            showNotification(`Review analyzed! Sentiment: ${analysis.sentiment.toUpperCase()}, Score: ${analysis.score.toFixed(2)}`);
+        });
+
+        document.getElementById('settingsForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            showNotification('Settings saved successfully!');
+        });
+
+        // Initialize app
+        window.addEventListener('load', function() {
+            loadTheme();
+            updateStats();
+            initializeCharts();
+            renderReviewsTable();
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98964aff214c4da5',t:'MTc1OTU5NzgyOS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
